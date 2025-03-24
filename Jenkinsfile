@@ -4,7 +4,7 @@ pipeline {
     stage('Set up Master environment') {
       agent {
         node {
-          label 'master'
+          label 'jenkins'
         }
 
       }
@@ -36,7 +36,7 @@ pip install pytest allure-pytest'''
         stage('Run Smoke on Master') {
           agent {
             node {
-              label 'master'
+              label 'jenkins'
             }
 
           }
@@ -65,7 +65,7 @@ deactivate'''
     stage('Generate Allure Report') {
       agent {
         node {
-          label 'master'
+          label 'jenkins'
         }
 
       }
@@ -77,7 +77,7 @@ deactivate'''
     stage('post Build actions') {
       agent {
         node {
-          label 'master'
+          label 'jenkins'
         }
 
       }
