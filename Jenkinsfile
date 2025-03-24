@@ -31,7 +31,7 @@ pipeline {
                         source venv/bin/activate
                         pip install --upgrade pip
                         pip install pytest pytest-html
-                        pytest -m smoke --html=smoke_report.html
+                        pytest -m smoke --html=smoke_report.html --self-contained-html
                         '''
                     }
                     post {
@@ -46,7 +46,7 @@ pipeline {
                         echo 'Running regression tests on master node...'
                         sh '''
                         source venv/bin/activate
-                        pytest -m regression --html=regression_report.html
+                        pytest -m regression --html=regression_report.html --self-contained-html
                         '''
                     }
                     post {
