@@ -40,7 +40,7 @@ pipeline {
             steps {
                 echo 'Generating report...'
                 sh '''
-                zip regression_report.html
+                zip regression_report.zip regression_report.html
                 '''
             }
             post {
