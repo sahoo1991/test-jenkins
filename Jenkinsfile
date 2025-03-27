@@ -1,5 +1,9 @@
 pipeline {
     agent none
+    environment {
+        SONARQUBE_URL = 'http://http://52.14.92.18/:9000'
+        SONARQUBE_TOKEN = 'squ_d77b4f74fe51798355882c45a47c11547cd1885a' 
+    }
     stages {
         stage('Checkout Repository') {
             agent { label 'master' }
@@ -46,6 +50,28 @@ pipeline {
             post {
                 always {
                     archiveArtifacts artifacts: 'test_reports.zip', allowEmptyArchive: true
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            agent { label 'master' }
+            steps {
+                sh """
+                sonar-scanner \
+                -Dsonar.projectKey=Python-Project \
+                -Dsonar.sources=. \
+                -Dsonar.host.url=${SONARQUBE_URL} \
+                -Dsonar.login=${SONARQUBE_TOKEN}
+                """
+            }
+        }
+         stage('Quality Gate') {
+            steps {
+                script {
+                    def qualityGate = waitForQualityGate()
+                    if (qualityGate.status != 'OK') {
+                        error "Pipeline failed due to SonarQube quality gate failure: ${qualityGate.status}"
+                    }
                 }
             }
         }
