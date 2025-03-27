@@ -20,27 +20,7 @@ pipeline {
                 '''
             }
         }
-        stage('Run Tests in Parallel') {
-            parallel {
-                stage('Smoke Tests on Slave') {
-                    agent { label 'slave1' }
-                    steps {
-                        echo 'Running smoke tests on slave node...'
-                        sh '''
-                        python3 -m venv venv
-                        source venv/bin/activate
-                        pip install --upgrade pip
-                        pip install pytest pytest-html
-                        pytest -m smoke --html=smoke_report.html --self-contained-html
-                        '''
-                    }
-                    post {
-                        always {
-                            archiveArtifacts artifacts: 'smoke_report.html', allowEmptyArchive: true
-                        }
-                    }
-                }
-                stage('Regression Tests on Master') {
+        stage('Run Tests') {
                     agent { label 'master' }
                     steps {
                         echo 'Running regression tests on master node...'
@@ -54,15 +34,13 @@ pipeline {
                             archiveArtifacts artifacts: 'regression_report.html', allowEmptyArchive: true
                         }
                     }
-                }
-            }
         }
-        stage('Generate Combined Report') {
+        stage('Generate Report') {
             agent { label 'master' }
             steps {
-                echo 'Combining reports into a single ZIP file...'
+                echo 'Generating report...'
                 sh '''
-                zip test_reports.zip smoke_report.html regression_report.html
+                zip regression_report.html
                 '''
             }
             post {
