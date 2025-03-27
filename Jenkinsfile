@@ -54,7 +54,7 @@ pipeline {
         stage('SonarQube Analysis') {
             agent { label 'master' }
             steps {
-                withSonarQubeEnv(credentialsId: 'sonarCred1') { // Replace 'sonarCred' with your Jenkins credential ID for SonarQube
+                withSonarQubeEnv(SonarQube1) {
                     sh 'sonar-scanner'
                 }
             }
