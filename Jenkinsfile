@@ -65,7 +65,7 @@ pipeline {
                     <li><a href="${env.BUILD_URL}artifact/test_reports.zip">Combined Report (ZIP)</a></li>
                 </ul>
                 """,
-                to: 'sahoosbautomation',
+                to: 'sahoosbautomation@gmail.com',
                 mimeType: 'text/html'
             )
         }
@@ -79,7 +79,7 @@ pipeline {
                 <p>Build Number: ${env.BUILD_NUMBER}</p>
                 <p>Check the Jenkins logs for more details.</p>
                 """,
-                to: 'sahoosbautomation',
+                to: 'sahoosbautomation@gmail.com',
                 mimeType: 'text/html'
             )
         }
