@@ -58,17 +58,13 @@ pipeline {
         stage('SonarQube Analysis') {
             agent { label 'master' }
             steps {
-                echo 'Running SonarQube analysis...'
-                sh """
-                sonar-scanner \
-                -Dsonar.projectKey=Python-Project \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=${SONARQUBE_URL} \
-                -Dsonar.login=${SONARQUBE_TOKEN}
-                """
+                withSonarQubeEnv(credentialsId: 'sonarCred') { // Replace 'sonarCred' with your Jenkins credential ID for SonarQube
+                    sh 'sonar-scanner'
+                }
             }
         }
         stage('Quality Gate') {
+            agent { label 'master' }
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
                 script {
