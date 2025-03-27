@@ -1,8 +1,8 @@
 pipeline {
     agent none
     environment {
-        SONARQUBE_URL = 'http://http://52.14.92.18/:9000'
-        SONARQUBE_TOKEN = 'squ_d77b4f74fe51798355882c45a47c11547cd1885a' 
+        SONARQUBE_URL = 'http://52.14.92.18:9000' // Corrected duplicate `http://`
+        SONARQUBE_TOKEN = 'squ_d77b4f74fe51798355882c45a47c11547cd1885a'
     }
     stages {
         stage('Checkout Repository') {
@@ -15,7 +15,7 @@ pipeline {
         stage('Setup Python Environment') {
             agent { label 'master' }
             steps {
-                echo 'Setting up Python virtual environment and installing pytest...'
+                echo 'Setting up Python virtual environment and installing dependencies...'
                 sh '''
                 python3 -m venv venv
                 source venv/bin/activate
@@ -25,37 +25,40 @@ pipeline {
             }
         }
         stage('Run Tests') {
-                    agent { label 'master' }
-                    steps {
-                        echo 'Running regression tests on master node...'
-                        sh '''
-                        source venv/bin/activate
-                        pytest -m regression --html=regression_report.html --self-contained-html
-                        '''
-                    }
-                    post {
-                        always {
-                            archiveArtifacts artifacts: 'regression_report.html', allowEmptyArchive: true
-                        }
-                    }
+            agent { label 'master' }
+            steps {
+                echo 'Running regression tests...'
+                sh '''
+                source venv/bin/activate
+                pytest -m regression --html=regression_report.html --self-contained-html
+                '''
+            }
+            post {
+                always {
+                    echo 'Archiving regression test report...'
+                    archiveArtifacts artifacts: 'regression_report.html', allowEmptyArchive: true
+                }
+            }
         }
         stage('Generate Report') {
             agent { label 'master' }
             steps {
-                echo 'Generating report...'
+                echo 'Generating ZIP report...'
                 sh '''
                 zip regression_report.zip regression_report.html
                 '''
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'test_reports.zip', allowEmptyArchive: true
+                    echo 'Archiving ZIP report...'
+                    archiveArtifacts artifacts: 'regression_report.zip', allowEmptyArchive: true
                 }
             }
         }
         stage('SonarQube Analysis') {
             agent { label 'master' }
             steps {
+                echo 'Running SonarQube analysis...'
                 sh """
                 sonar-scanner \
                 -Dsonar.projectKey=Python-Project \
@@ -65,12 +68,13 @@ pipeline {
                 """
             }
         }
-         stage('Quality Gate') {
+        stage('Quality Gate') {
             steps {
+                echo 'Checking SonarQube Quality Gate status...'
                 script {
                     def qualityGate = waitForQualityGate()
                     if (qualityGate.status != 'OK') {
-                        error "Pipeline failed due to SonarQube quality gate failure: ${qualityGate.status}"
+                        error "Pipeline failed due to SonarQube Quality Gate failure: ${qualityGate.status}"
                     }
                 }
             }
@@ -88,7 +92,7 @@ pipeline {
                 <p>Reports:</p>
                 <ul>
                     <li><a href="${env.BUILD_URL}artifact/regression_report.html">Regression Report</a></li>
-                    <li><a href="${env.BUILD_URL}artifact/test_reports.zip">Combined Report (ZIP)</a></li>
+                    <li><a href="${env.BUILD_URL}artifact/regression_report.zip">Combined Report (ZIP)</a></li>
                 </ul>
                 """,
                 to: 'sahoosbautomation@gmail.com',
