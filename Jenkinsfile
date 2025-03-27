@@ -1,9 +1,5 @@
 pipeline {
     agent none
-    environment {
-        SONARQUBE_URL = 'http://52.14.92.18:9000' // Corrected duplicate `http://`
-        SONARQUBE_TOKEN = 'squ_d77b4f74fe51798355882c45a47c11547cd1885a'
-    }
     stages {
         stage('Checkout Repository') {
             agent { label 'master' }
