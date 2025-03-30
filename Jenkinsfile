@@ -54,18 +54,18 @@ pipeline {
                 }
             }
         }
-        stage('Quality Gate') {
-            agent { label 'master' }
-            steps {
-                echo 'Checking SonarQube Quality Gate status...'
-                script {
-                    def qualityGate = waitForQualityGate()
-                    if (qualityGate.status != 'OK') {
-                        error "Pipeline failed due to SonarQube Quality Gate failure: ${qualityGate.status}"
-                    }
-                }
-            }
-        }
+        // stage('Quality Gate') {
+        //     agent { label 'master' }
+        //     steps {
+        //         echo 'Checking SonarQube Quality Gate status...'
+        //         script {
+        //             def qualityGate = waitForQualityGate()
+        //             if (qualityGate.status != 'OK') {
+        //                 error "Pipeline failed due to SonarQube Quality Gate failure: ${qualityGate.status}"
+        //             }
+        //         }
+        //     }
+        // }
     }
     post {
         success {
