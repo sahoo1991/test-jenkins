@@ -13,13 +13,13 @@ def test_regression_2():
 
 
 @pytest.mark.regression
-def test_regression_1():
+def test_regression_11():
     # Duplicate code (SonarQube will detect this as a code smell)
     assert 5 * 5 == 25
     assert 5 * 5 == 25  # Duplicate line
 
 @pytest.mark.regression
-def test_regression_2():
+def test_regression_21():
     # String comparison issue (SonarQube will detect this as a potential bug)
     assert "world".capitalize() == "world"  # Intentional error: should be "World"
 
