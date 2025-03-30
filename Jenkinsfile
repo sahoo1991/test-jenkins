@@ -13,9 +13,6 @@ pipeline {
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
                 bat '''
-                python -m venv venv
-                venv\\Scripts\\activate
-                pip install --upgrade pip
                 pip install pytest pytest-html
                 '''
             }
@@ -23,9 +20,6 @@ pipeline {
         stage('Run Tests') {
             agent { label 'master' }
             steps {
-                echo 'Running regression tests...'
-                bat '''
-                venv\\Scripts\\activate
                 pytest -m regression --html=regression_report.html --self-contained-html
                 '''
             }
