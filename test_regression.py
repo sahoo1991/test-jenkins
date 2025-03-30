@@ -29,3 +29,19 @@ def complex_function():
         for j in range(5):
             for k in range(5):
                 print(i, j, k)
+
+def unused_parameters(a, b, c):
+    return "Unused parameters"
+
+# Function with excessive length (SonarQube will detect this as a code smell)
+def long_function():
+    print("This is a long function")
+    print("This is a long function")
+    print("This is a long function")
+    print("This is a long function")
+    print("This is a long function")
+    print("This is a long function")
+    print("This is a long function")
+    print("This is a long function")
+    print("This is a long function")
+    print("This is a long function")
