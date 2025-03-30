@@ -37,7 +37,7 @@ pipeline {
             agent { label 'master' }
             steps {
                 echo 'Generating ZIP report...'
-                bat 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip'
+                bat 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip -Force'
             }
             post {
                 always {
