@@ -20,8 +20,11 @@ pipeline {
         stage('Run Tests') {
             agent { label 'master' }
             steps {
+                 echo 'Running Tests'
+                bat'''
                 pytest -m regression --html=regression_report.html --self-contained-html
                 '''
+                 echo 'Run Completed'
             }
             post {
                 always {
