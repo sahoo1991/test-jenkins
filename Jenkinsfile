@@ -12,9 +12,9 @@ pipeline {
             agent { label 'master' }
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
-                sh '''
-                python3 -m venv venv
-                source venv/bin/activate
+                bat '''
+                python -m venv venv
+                venv\\Scripts\\activate
                 pip install --upgrade pip
                 pip install pytest pytest-html
                 '''
@@ -24,8 +24,8 @@ pipeline {
             agent { label 'master' }
             steps {
                 echo 'Running regression tests...'
-                sh '''
-                source venv/bin/activate
+                bat '''
+                venv\\Scripts\\activate
                 pytest -m regression --html=regression_report.html --self-contained-html
                 '''
             }
@@ -40,9 +40,7 @@ pipeline {
             agent { label 'master' }
             steps {
                 echo 'Generating ZIP report...'
-                sh '''
-                zip regression_report.zip regression_report.html
-                '''
+                bat 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip'
             }
             post {
                 always {
@@ -54,8 +52,8 @@ pipeline {
         stage('SonarQube Analysis') {
             agent { label 'master' }
             steps {
-                withSonarQubeEnv(SonarQube1) {
-                    sh 'sonar-scanner'
+                withSonarQubeEnv('mySonar') {
+                    bat 'sonar-scanner'
                 }
             }
         }
