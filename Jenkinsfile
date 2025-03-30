@@ -67,38 +67,38 @@ pipeline {
         //     }
         // }
     }
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-            emailext(
-                subject: "Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                <p>The build was successful!</p>
-                <p>Pipeline: ${env.JOB_NAME}</p>
-                <p>Build Number: ${env.BUILD_NUMBER}</p>
-                <p>Reports:</p>
-                <ul>
-                    <li><a href="${env.BUILD_URL}artifact/regression_report.html">Regression Report</a></li>
-                    <li><a href="${env.BUILD_URL}artifact/regression_report.zip">Combined Report (ZIP)</a></li>
-                </ul>
-                """,
-                to: 'sahoosbautomation@gmail.com',
-                mimeType: 'text/html'
-            )
-        }
-        failure {
-            echo 'Pipeline failed!'
-            emailext(
-                subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                <p>The build failed!</p>
-                <p>Pipeline: ${env.JOB_NAME}</p>
-                <p>Build Number: ${env.BUILD_NUMBER}</p>
-                <p>Check the Jenkins logs for more details.</p>
-                """,
-                to: 'sahoosbautomation@gmail.com',
-                mimeType: 'text/html'
-            )
-        }
-    }
+    // post {
+        // success {
+        //     echo 'Pipeline completed successfully!'
+        //     emailext(
+        //         subject: "Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+        //         body: """
+        //         <p>The build was successful!</p>
+        //         <p>Pipeline: ${env.JOB_NAME}</p>
+        //         <p>Build Number: ${env.BUILD_NUMBER}</p>
+        //         <p>Reports:</p>
+        //         <ul>
+        //             <li><a href="${env.BUILD_URL}artifact/regression_report.html">Regression Report</a></li>
+        //             <li><a href="${env.BUILD_URL}artifact/regression_report.zip">Combined Report (ZIP)</a></li>
+        //         </ul>
+        //         """,
+        //         to: 'sahoosbautomation@gmail.com',
+        //         mimeType: 'text/html'
+        //     )
+        // }
+        // failure {
+        //     echo 'Pipeline failed!'
+        //     emailext(
+        //         subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+        //         body: """
+        //         <p>The build failed!</p>
+        //         <p>Pipeline: ${env.JOB_NAME}</p>
+        //         <p>Build Number: ${env.BUILD_NUMBER}</p>
+        //         <p>Check the Jenkins logs for more details.</p>
+        //         """,
+        //         to: 'sahoosbautomation@gmail.com',
+        //         mimeType: 'text/html'
+        //     )
+        // }
+    // }
 }
