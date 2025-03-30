@@ -21,10 +21,15 @@ pipeline {
             agent { label 'master' }
             steps {
                  echo 'Running Tests'
-                bat'''
-                pytest -m regression --html=regression_report.html --self-contained-html
-                '''
-                 echo 'Run Completed'
+                    script {
+                    def testResult = bat(returnStatus: true, script: '''
+                        pytest -m regression --html=regression_report.html --self-contained-html
+                    ''')
+                    if (testResult != 0) {
+                        echo "Some tests failed. Marking the build as unstable."
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
             }
             post {
                 always {
