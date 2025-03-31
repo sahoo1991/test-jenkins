@@ -43,15 +43,15 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('mySonar') {
-                    
-                    sh '''
-                    echo ${SONAR_AUTH_TOKEN}
-                    export PATH=$PATH:/opt/homebrew/bin
-                        sonar-scanner \
-                          -Dsonar.projectKey=test-jenkins \
-                    '''
-                }
+        withSonarQubeEnv('mySonar') {
+            sh '''
+            export PATH=$PATH:/opt/homebrew/bin
+            sonar-scanner \
+              -Dsonar.projectKey=test-jenkins \
+              -Dsonar.host.url=http://localhost:9000 \
+              -Dsonar.login=squ_edd65850828274f7bb895934150f5ff777994955
+            '''
+        }
             }
         }
         stage('Quality Gate') {
