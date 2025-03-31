@@ -48,7 +48,11 @@ pipeline {
                     sh '''
                     echo ${SONAR_AUTH_TOKEN}
                     export PATH=$PATH:/opt/homebrew/bin
-                    sonar-scanner 
+                        sonar-scanner \
+                          -Dsonar.projectKey=my-python-project \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=http://localhost:9000 \
+                          -Dsonar.login=${SONAR_AUTH_TOKEN}
                     '''
                 }
             }
