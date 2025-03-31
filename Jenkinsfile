@@ -44,6 +44,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                     sh '''
+                    export PATH=$PATH:/opt/homebrew/bin
                        sonar-scanner
                 '''
                 // script {
