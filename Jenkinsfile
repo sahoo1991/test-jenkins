@@ -2,14 +2,12 @@ pipeline {
     agent none
     stages {
         stage('Checkout Repository') {
-            agent { label 'master' }
             steps {
                 echo 'Checking out the repository...'
                 checkout scm
             }
         }
         stage('Setup Python Environment') {
-            agent { label 'master' }
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
                 sh '''
@@ -20,7 +18,6 @@ pipeline {
             }
         }
         stage('Run Tests') {
-            agent { label 'master' }
             steps {
                 echo 'Running Tests'
                 script {
@@ -42,7 +39,6 @@ pipeline {
             }
         }
         stage('Generate Report') {
-            agent { label 'master' }
             steps {
                 echo 'Generating ZIP report...'
                 sh '''
@@ -57,7 +53,7 @@ pipeline {
             }
         }
         stage('SonarQube Analysis') {
-            agent { label 'master' }
+   
             steps {
                 withSonarQubeEnv('mySonar') {
                     sh '''
@@ -67,7 +63,6 @@ pipeline {
             }
         }
         stage('Quality Gate') {
-            agent { label 'master' }
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
                 script {
