@@ -1,28 +1,29 @@
+
 pipeline {
     agent none
     stages {
         stage('Checkout Repository') {
+            agent { label 'master' }
             steps {
                 echo 'Checking out the repository...'
                 checkout scm
             }
         }
         stage('Setup Python Environment') {
+            agent { label 'master' }
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
-                sh '''
-                python3 -m venv venv
-                source venv/bin/activate
+                bat '''
                 pip install pytest pytest-html
                 '''
             }
         }
         stage('Run Tests') {
+            agent { label 'master' }
             steps {
-                echo 'Running Tests'
-                script {
-                    def testResult = sh(returnStatus: true, script: '''
-                        source venv/bin/activate
+                 echo 'Running Tests'
+                    script {
+                    def testResult = bat(returnStatus: true, script: '''
                         pytest -m regression --html=regression_report.html --self-contained-html
                     ''')
                     if (testResult != 0) {
@@ -39,11 +40,10 @@ pipeline {
             }
         }
         stage('Generate Report') {
+            agent { label 'master' }
             steps {
                 echo 'Generating ZIP report...'
-                sh '''
-                zip regression_report.zip regression_report.html
-                '''
+                bat 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip -Force'
             }
             post {
                 always {
@@ -53,16 +53,15 @@ pipeline {
             }
         }
         stage('SonarQube Analysis') {
-   
+            agent { label 'master' }
             steps {
                 withSonarQubeEnv('mySonar') {
-                    sh '''
-                    sonar-scanner
-                    '''
+                    bat 'sonar-scanner'
                 }
             }
         }
         stage('Quality Gate') {
+            agent { label 'master' }
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
                 script {
