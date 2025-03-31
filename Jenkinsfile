@@ -13,6 +13,9 @@ pipeline {
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
                 sh '''
+                python3 -m venv venv
+                . venv/bin/activate
+                pip install --upgrade pip
                 pip install pytest pytest-html
                 '''
             }
@@ -20,9 +23,10 @@ pipeline {
         stage('Run Tests') {
             agent { label 'master' }
             steps {
-                 echo 'Running Tests'
-                    script {
+                echo 'Running Tests...'
+                script {
                     def testResult = sh(returnStatus: true, script: '''
+                        . venv/bin/activate
                         pytest -m regression --html=regression_report.html --self-contained-html
                     ''')
                     if (testResult != 0) {
@@ -42,7 +46,9 @@ pipeline {
             agent { label 'master' }
             steps {
                 echo 'Generating ZIP report...'
-                sh 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip -Force'
+                sh '''
+                zip -r regression_report.zip regression_report.html
+                '''
             }
             post {
                 always {
@@ -55,7 +61,14 @@ pipeline {
             agent { label 'master' }
             steps {
                 withSonarQubeEnv('mySonar') {
-                    sh 'sonar-scanner'
+                    echo 'Running SonarQube analysis...'
+                    sh '''
+                    sonar-scanner \
+                        -Dsonar.projectKey=my_project_key \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.login=$SONAR_AUTH_TOKEN
+                    '''
                 }
             }
         }
@@ -72,38 +85,38 @@ pipeline {
             }
         }
     }
-    // post {
-        // success {
-        //     echo 'Pipeline completed successfully!'
-        //     emailext(
-        //         subject: "Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-        //         body: """
-        //         <p>The build was successful!</p>
-        //         <p>Pipeline: ${env.JOB_NAME}</p>
-        //         <p>Build Number: ${env.BUILD_NUMBER}</p>
-        //         <p>Reports:</p>
-        //         <ul>
-        //             <li><a href="${env.BUILD_URL}artifact/regression_report.html">Regression Report</a></li>
-        //             <li><a href="${env.BUILD_URL}artifact/regression_report.zip">Combined Report (ZIP)</a></li>
-        //         </ul>
-        //         """,
-        //         to: 'sahoosbautomation@gmail.com',
-        //         mimeType: 'text/html'
-        //     )
-        // }
-        // failure {
-        //     echo 'Pipeline failed!'
-        //     emailext(
-        //         subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-        //         body: """
-        //         <p>The build failed!</p>
-        //         <p>Pipeline: ${env.JOB_NAME}</p>
-        //         <p>Build Number: ${env.BUILD_NUMBER}</p>
-        //         <p>Check the Jenkins logs for more details.</p>
-        //         """,
-        //         to: 'sahoosbautomation@gmail.com',
-        //         mimeType: 'text/html'
-        //     )
-        // }
-    // }
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+            emailext(
+                subject: "Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                <p>The build was successful!</p>
+                <p>Pipeline: ${env.JOB_NAME}</p>
+                <p>Build Number: ${env.BUILD_NUMBER}</p>
+                <p>Reports:</p>
+                <ul>
+                    <li><a href="${env.BUILD_URL}artifact/regression_report.html">Regression Report</a></li>
+                    <li><a href="${env.BUILD_URL}artifact/regression_report.zip">Combined Report (ZIP)</a></li>
+                </ul>
+                """,
+                to: 'sahoosbautomation@gmail.com',
+                mimeType: 'text/html'
+            )
+        }
+        failure {
+            echo 'Pipeline failed!'
+            emailext(
+                subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """
+                <p>The build failed!</p>
+                <p>Pipeline: ${env.JOB_NAME}</p>
+                <p>Build Number: ${env.BUILD_NUMBER}</p>
+                <p>Check the Jenkins logs for more details.</p>
+                """,
+                to: 'sahoosbautomation@gmail.com',
+                mimeType: 'text/html'
+            )
+        }
+    }
 }
