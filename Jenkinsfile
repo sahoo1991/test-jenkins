@@ -45,12 +45,12 @@ pipeline {
             steps {
                 script {
                     // Use the correct path to SonarScanner
-                    def scannerHome = '/opt/homebrew/bin'
+                    // def scannerHome = '/opt/homebrew/bin'
         
                     // Run SonarQube analysis
                     withSonarQubeEnv('mySonar') {
                         sh '''
-                        export PATH=$PATH:${scannerHome}
+                        export PATH=$PATH:/opt/homebrew/bin
                         sonar-scanner
                         '''
                     }
