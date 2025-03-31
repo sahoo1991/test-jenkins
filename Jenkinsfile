@@ -49,10 +49,10 @@ pipeline {
                     echo ${SONAR_AUTH_TOKEN}
                     export PATH=$PATH:/opt/homebrew/bin
                         sonar-scanner \
-                          -Dsonar.projectKey=my-python-project \
+                          -Dsonar.projectKey=test-jenkins \
                           -Dsonar.sources=. \
                           -Dsonar.host.url=http://localhost:9000 \
-                          -Dsonar.login=squ_8bcb402c9b148172605dc33680de16127355f100
+                          -Dsonar.login=squ_e2d7168ffa499bc44239ac3452d37ef232b2ab21
                     '''
                 }
             }
