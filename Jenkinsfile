@@ -1,29 +1,31 @@
-
 pipeline {
-    agent none
+    agent any
+    environment {
+        SONAR_AUTH_TOKEN = credentials('sonarCred') // Store SonarQube token in Jenkins credentials
+    }
     stages {
         stage('Checkout Repository') {
-            agent { label 'master' }
             steps {
                 echo 'Checking out the repository...'
                 checkout scm
             }
         }
         stage('Setup Python Environment') {
-            agent { label 'master' }
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
                 sh '''
+                python3 -m venv venv
+                source venv/bin/activate
                 pip install pytest pytest-html
                 '''
             }
         }
         stage('Run Tests') {
-            agent { label 'master' }
             steps {
-                 echo 'Running Tests'
-                    script {
+                echo 'Running Tests'
+                script {
                     def testResult = sh(returnStatus: true, script: '''
+                        source venv/bin/activate
                         pytest -m regression --html=regression_report.html --self-contained-html
                     ''')
                     if (testResult != 0) {
@@ -39,29 +41,21 @@ pipeline {
                 }
             }
         }
-        stage('Generate Report') {
-            agent { label 'master' }
-            steps {
-                echo 'Generating ZIP report...'
-                sh 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip -Force'
-            }
-            post {
-                always {
-                    echo 'Archiving ZIP report...'
-                    archiveArtifacts artifacts: 'regression_report.zip', allowEmptyArchive: true
-                }
-            }
-        }
         stage('SonarQube Analysis') {
-            agent { label 'master' }
             steps {
                 withSonarQubeEnv('mySonar') {
-                    sh 'sonar-scanner'
+                    sh '''
+                    source venv/bin/activate
+                    sonar-scanner \
+                        -Dsonar.projectKey=my-python-project \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://localhost:9000 \
+                        -Dsonar.login=${SONAR_AUTH_TOKEN}
+                    '''
                 }
             }
         }
         stage('Quality Gate') {
-            agent { label 'master' }
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
                 script {
@@ -73,38 +67,12 @@ pipeline {
             }
         }
     }
-    // post {
-        // success {
-        //     echo 'Pipeline completed successfully!'
-        //     emailext(
-        //         subject: "Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-        //         body: """
-        //         <p>The build was successful!</p>
-        //         <p>Pipeline: ${env.JOB_NAME}</p>
-        //         <p>Build Number: ${env.BUILD_NUMBER}</p>
-        //         <p>Reports:</p>
-        //         <ul>
-        //             <li><a href="${env.BUILD_URL}artifact/regression_report.html">Regression Report</a></li>
-        //             <li><a href="${env.BUILD_URL}artifact/regression_report.zip">Combined Report (ZIP)</a></li>
-        //         </ul>
-        //         """,
-        //         to: 'sahoosbautomation@gmail.com',
-        //         mimeType: 'text/html'
-        //     )
-        // }
-        // failure {
-        //     echo 'Pipeline failed!'
-        //     emailext(
-        //         subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-        //         body: """
-        //         <p>The build failed!</p>
-        //         <p>Pipeline: ${env.JOB_NAME}</p>
-        //         <p>Build Number: ${env.BUILD_NUMBER}</p>
-        //         <p>Check the Jenkins logs for more details.</p>
-        //         """,
-        //         to: 'sahoosbautomation@gmail.com',
-        //         mimeType: 'text/html'
-        //     )
-        // }
-    // }
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
 }
