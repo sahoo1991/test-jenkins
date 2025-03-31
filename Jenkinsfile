@@ -45,7 +45,7 @@ pipeline {
             steps {
                 script {
                     // Get the SonarQube scanner tool
-                    def scannerHome = tool 'mySonar'
+                    def scannerHome = '/opt/homebrew'
 
                     // Run SonarQube analysis
                     withSonarQubeEnv('mySonar') {
