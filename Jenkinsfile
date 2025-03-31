@@ -58,7 +58,12 @@ pipeline {
             }
         }
         stage('SonarQube Analysis') {
-            agent { label 'master' }
+            agent { label 'master' 
+                docker {
+                    image 'sonarsource/sonar-scanner-cli:latest'
+                }
+                  
+            }
             steps {
                 withSonarQubeEnv('mySonar') {
                     echo 'Running SonarQube analysis...'
