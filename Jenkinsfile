@@ -41,12 +41,25 @@ pipeline {
                 }
             }
         }
-          stage('SonarQube Analysis') {
-            def scannerHome = tool 'mySonar';
-            withSonarQubeEnv() {
-              sh "${scannerHome}/bin/sonar-scanner"
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    // Get the SonarQube scanner tool
+                    def scannerHome = tool 'mySonar'
+
+                    // Run SonarQube analysis
+                    withSonarQubeEnv('mySonar') {
+                        sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                          -Dsonar.projectKey=test-jenkins \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.login=$SONAR_AUTH_TOKEN
+                        """
+                    }
+                }
             }
-          }
+        }
         stage('Quality Gate') {
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
