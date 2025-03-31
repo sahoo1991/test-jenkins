@@ -43,10 +43,17 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                    sh '''
-                    export PATH=$PATH:/opt/homebrew/bin
-                       sonar-scanner
-                '''
+                script {
+                    // Use the correct path to SonarScanner
+                    def scannerHome = '/opt/homebrew/bin'
+        
+                    // Run SonarQube analysis
+                    withSonarQubeEnv('mySonar') {
+                        sh '''
+                        export PATH=$PATH:${scannerHome}
+                        sonar-scanner
+                        '''
+                    }
                 // script {
                     // Use the correct path to SonarScanner
                     // def scannerHome = '/opt/homebrew/bin'
