@@ -41,19 +41,12 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
-            steps {
-        withSonarQubeEnv('mySonar') {
-            sh '''
-            export PATH=$PATH:/opt/homebrew/bin
-            sonar-scanner \
-              -Dsonar.projectKey=test-jenkins \
-              -Dsonar.host.url=http://localhost:9000 \
-              -Dsonar.login=squ_edd65850828274f7bb895934150f5ff777994955
-            '''
-        }
+          stage('SonarQube Analysis') {
+            def scannerHome = tool 'mySonar';
+            withSonarQubeEnv() {
+              sh "${scannerHome}/bin/sonar-scanner"
             }
-        }
+          }
         stage('Quality Gate') {
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
