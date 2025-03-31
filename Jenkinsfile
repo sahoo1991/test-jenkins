@@ -54,6 +54,7 @@ pipeline {
                         sonar-scanner
                         '''
                     }
+                }
                 // script {
                     // Use the correct path to SonarScanner
                     // def scannerHome = '/opt/homebrew/bin'
