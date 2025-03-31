@@ -44,18 +44,19 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // Get the SonarQube scanner tool
-                    def scannerHome = '/opt/homebrew'
+                    // Use the correct path to SonarScanner
+                    def scannerHome = '/opt/homebrew/bin'
 
-                    // Run SonarQube analysis
+                    // Run SonarQube analysis securely
                     withSonarQubeEnv('mySonar') {
-                        sh """
-                        ${scannerHome}/bin/sonar-scanner \
+                        sh '''
+                        export PATH=$PATH:${scannerHome}
+                        export SONAR_TOKEN=$SONAR_AUTH_TOKEN
+                        sonar-scanner \
                           -Dsonar.projectKey=test-jenkins \
                           -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONAR_HOST_URL \
-                          -Dsonar.login=$SONAR_AUTH_TOKEN
-                        """
+                          -Dsonar.host.url=$SONAR_HOST_URL
+                        '''
                     }
                 }
             }
