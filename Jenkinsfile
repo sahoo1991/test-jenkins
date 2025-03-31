@@ -52,7 +52,7 @@ pipeline {
                           -Dsonar.projectKey=my-python-project \
                           -Dsonar.sources=. \
                           -Dsonar.host.url=http://localhost:9000 \
-                          -Dsonar.login=${SONAR_AUTH_TOKEN}
+                          -Dsonar.login=squ_8bcb402c9b148172605dc33680de16127355f100
                     '''
                 }
             }
