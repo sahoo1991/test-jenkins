@@ -50,9 +50,6 @@ pipeline {
                     export PATH=$PATH:/opt/homebrew/bin
                         sonar-scanner \
                           -Dsonar.projectKey=test-jenkins \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=http://localhost:9000 \
-                          -Dsonar.login=squ_e2d7168ffa499bc44239ac3452d37ef232b2ab21
                     '''
                 }
             }
