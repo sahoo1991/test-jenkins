@@ -44,7 +44,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('mySonar') {
-                    echo ${SONAR_AUTH_TOKEN}
+                    echo '${SONAR_AUTH_TOKEN}'
                     
                     sh '''
                     sonar-scanner 
