@@ -43,22 +43,25 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                script {
+                    sh '''
+                       sonar-scanner
+                '''
+                // script {
                     // Use the correct path to SonarScanner
-                    def scannerHome = '/opt/homebrew/bin'
+                    // def scannerHome = '/opt/homebrew/bin'
 
-                    // Run SonarQube analysis securely
-                    withSonarQubeEnv('mySonar') {
-                        sh '''
-                        export PATH=$PATH:${scannerHome}
-                        export SONAR_TOKEN=$SONAR_AUTH_TOKEN
-                        sonar-scanner \
-                          -Dsonar.projectKey=test-jenkins \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONAR_HOST_URL
-                        '''
-                    }
-                }
+                    // // Run SonarQube analysis securely
+                    // withSonarQubeEnv('mySonar') {
+                    //     sh '''
+                    //     export PATH=$PATH:${scannerHome}
+                    //     export SONAR_TOKEN=$SONAR_AUTH_TOKEN
+                    //     sonar-scanner \
+                    //       -Dsonar.projectKey=test-jenkins \
+                    //       -Dsonar.sources=. \
+                    //       -Dsonar.host.url=$SONAR_HOST_URL
+                    //     '''
+                    // }
+                // }
             }
         }
         stage('Quality Gate') {
