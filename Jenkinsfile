@@ -44,10 +44,10 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('mySonar') {
-                    echo '${SONAR_AUTH_TOKEN}'
-                    export PATH=$PATH:/opt/homebrew/bin/
                     
                     sh '''
+                    echo ${SONAR_AUTH_TOKEN}
+                    export PATH=$PATH:/opt/homebrew/bin
                     sonar-scanner 
                     '''
                 }
