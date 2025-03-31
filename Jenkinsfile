@@ -12,7 +12,7 @@ pipeline {
             agent { label 'master' }
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
-                bat '''
+                sh '''
                 pip install pytest pytest-html
                 '''
             }
@@ -22,7 +22,7 @@ pipeline {
             steps {
                  echo 'Running Tests'
                     script {
-                    def testResult = bat(returnStatus: true, script: '''
+                    def testResult = sh(returnStatus: true, script: '''
                         pytest -m regression --html=regression_report.html --self-contained-html
                     ''')
                     if (testResult != 0) {
@@ -42,7 +42,7 @@ pipeline {
             agent { label 'master' }
             steps {
                 echo 'Generating ZIP report...'
-                bat 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip -Force'
+                sh 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip -Force'
             }
             post {
                 always {
@@ -55,7 +55,7 @@ pipeline {
             agent { label 'master' }
             steps {
                 withSonarQubeEnv('mySonar') {
-                    bat 'sonar-scanner'
+                    sh 'sonar-scanner'
                 }
             }
         }
