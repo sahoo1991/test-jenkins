@@ -44,13 +44,10 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('mySonar') {
+                    echo ${SONAR_AUTH_TOKEN}
+                    
                     sh '''
-                    source venv/bin/activate
-                    sonar-scanner \
-                        -Dsonar.projectKey=my-python-project \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://localhost:9000 \
-                        -Dsonar.login=${SONAR_AUTH_TOKEN}
+                    sonar-scanner 
                     '''
                 }
             }
