@@ -2,14 +2,22 @@ pipeline {
     agent none
     stages {
         stage('Checkout Repository') {
-            agent { label 'master' }
+            agent {
+                docker {
+                    image 'jenkins-agent' // Replace with the name of your custom Jenkins agent image
+                }
+            }
             steps {
                 echo 'Checking out the repository...'
                 checkout scm
             }
         }
         stage('Setup Python Environment') {
-            agent { label 'master' }
+            agent {
+                docker {
+                    image 'jenkins-agent' // Replace with the name of your custom Jenkins agent image
+                }
+            }
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
                 sh '''
@@ -24,7 +32,11 @@ pipeline {
             }
         }
         stage('Run Tests') {
-            agent { label 'master' }
+            agent {
+                docker {
+                    image 'jenkins-agent' // Replace with the name of your custom Jenkins agent image
+                }
+            }
             steps {
                 echo 'Running Tests...'
                 script {
@@ -46,14 +58,14 @@ pipeline {
             }
         }
         stage('Generate Report') {
-            agent { label 'master' }
+            agent {
+                docker {
+                    image 'jenkins-agent' // Replace with the name of your custom Jenkins agent image
+                }
+            }
             steps {
                 echo 'Generating ZIP report...'
                 sh '''
-                if ! command -v zip &> /dev/null; then
-                    echo "zip command not found. Installing..."
-                    sudo apt-get update && sudo apt-get install -y zip
-                fi
                 zip -r regression_report.zip regression_report.html
                 '''
             }
@@ -71,7 +83,7 @@ pipeline {
                 }
             }
             steps {
-                withSonarQubeEnv('mySonar') {
+                withSonarQubeEnv('mySonar') { // Ensure 'mySonar' matches the name of your SonarQube server in Jenkins
                     echo 'Running SonarQube analysis...'
                     sh '''
                     if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_AUTH_TOKEN" ]; then
@@ -88,7 +100,11 @@ pipeline {
             }
         }
         stage('Quality Gate') {
-            agent { label 'master' }
+            agent {
+                docker {
+                    image 'jenkins-agent' // Replace with the name of your custom Jenkins agent image
+                }
+            }
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
                 script {
