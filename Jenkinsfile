@@ -13,6 +13,9 @@ pipeline {
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
                 sh '''
+                if [ -d "venv" ]; then
+                    rm -rf venv
+                fi
                 python3 -m venv venv
                 . venv/bin/activate
                 pip install --upgrade pip
@@ -47,6 +50,10 @@ pipeline {
             steps {
                 echo 'Generating ZIP report...'
                 sh '''
+                if ! command -v zip &> /dev/null; then
+                    echo "zip command not found. Installing..."
+                    sudo apt-get update && sudo apt-get install -y zip
+                fi
                 zip -r regression_report.zip regression_report.html
                 '''
             }
@@ -58,16 +65,19 @@ pipeline {
             }
         }
         stage('SonarQube Analysis') {
-            agent { label 'master' 
+            agent {
                 docker {
                     image 'sonarsource/sonar-scanner-cli:latest'
                 }
-                  
             }
             steps {
                 withSonarQubeEnv('mySonar') {
                     echo 'Running SonarQube analysis...'
                     sh '''
+                    if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_AUTH_TOKEN" ]; then
+                        echo "Error: SONAR_HOST_URL or SONAR_AUTH_TOKEN is not set."
+                        exit 1
+                    fi
                     sonar-scanner \
                         -Dsonar.projectKey=my_project_key \
                         -Dsonar.sources=. \
@@ -82,9 +92,11 @@ pipeline {
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
                 script {
-                    def qualityGate = waitForQualityGate()
-                    if (qualityGate.status != 'OK') {
-                        error "Pipeline failed due to SonarQube Quality Gate failure: ${qualityGate.status}"
+                    timeout(time: 5, unit: 'MINUTES') {
+                        def qualityGate = waitForQualityGate()
+                        if (qualityGate.status != 'OK') {
+                            error "Pipeline failed due to SonarQube Quality Gate failure: ${qualityGate.status}"
+                        }
                     }
                 }
             }
