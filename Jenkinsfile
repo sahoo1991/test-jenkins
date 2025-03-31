@@ -45,6 +45,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('mySonar') {
                     echo '${SONAR_AUTH_TOKEN}'
+                    export PATH=$PATH:/opt/homebrew/bin/
                     
                     sh '''
                     sonar-scanner 
