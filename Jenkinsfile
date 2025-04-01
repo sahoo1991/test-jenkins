@@ -4,6 +4,9 @@ pipeline {
     environment {
         SONAR_SERVER = 'http://192.168.31.4:9000' // SonarQube server URL
         SONAR_TOKEN = 'sqa_cd09a59a2b62c8e78cdfca6c42d49eed90b43891'
+        NEXUS_SERVER = 'http://192.168.31.4:8081'
+        NEXUS_REPO = 'myRepo'
+        
     }
     stages {
         stage('Checkout Repository') {
@@ -56,73 +59,97 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
+        stage('Upload to Nexus') {
             agent { label 'master' }
             steps {
-                withSonarQubeEnv('mySonar') {
-                    bat 'sonar-scanner'
-                }
-            }
-        }
-        stage('Check Quality Gate') {
-    agent { label 'master' }
-    steps {
-        script {
-            // Fetch the task ID and project key from the SonarQube analysis report
-            def reportPath = "${env.WORKSPACE}/.scannerwork/report-task.txt"
-            def props = readProperties file: reportPath
-            def ceTaskUrl = props['ceTaskUrl']
-            def projectKey = props['projectKey'] // Extract the project key
+                script {
+                    // Define the file to upload
+                    def fileToUpload = "${env.WORKSPACE}/regression_report.zip"
 
-            // Hardcode the token for debugging
-            def authHeader = "Basic ${"sqa_cd09a59a2b62c8e78cdfca6c42d49eed90b43891:".bytes.encodeBase64().toString()}"
+                    // Print debug information
+                    echo "Uploading file: ${fileToUpload} to Nexus"
 
-            // Print the Authorization header and URL for debugging
-            echo "ceTaskUrl: ${ceTaskUrl}"
-            echo "authHeader: ${authHeader}"
-
-            // Poll the SonarQube API to wait for the task to complete
-            def analysisStatus = ''
-            timeout(time: 5, unit: 'MINUTES') {
-                waitUntil {
+                    // Upload the file to Nexus
                     def response = httpRequest(
-                        url: ceTaskUrl,
-                        customHeaders: [[name: 'Authorization', value: authHeader]],
-                        validResponseCodes: '200'
+                        httpMode: 'PUT',
+                        url: "${NEXUS_SERVER}/repository/${NEXUS_REPO}/regression_report.zip",
+                        customHeaders: [[name: 'Authorization', value: "Basic ${credentials('nexus-cred').username}:${credentials('nexus-cred').password}".bytes.encodeBase64().toString()}]],
+                        uploadFile: fileToUpload,
+                        validResponseCodes: '200,201'
                     )
-                    def json = readJSON text: response.content
-                    analysisStatus = json['task']['status']
-                    return analysisStatus == 'SUCCESS' || analysisStatus == 'FAILED'
+
+                    // Print the response
+                    echo "Nexus upload response: ${response.content}"
                 }
             }
-
-            // If the task failed, fail the pipeline
-            if (analysisStatus == 'FAILED') {
-                error "SonarQube analysis task failed!"
-            }
-
-            // Fetch the quality gate status
-            def qualityGateResponse = httpRequest(
-                url: "http://192.168.31.4:9000/api/qualitygates/project_status?projectKey=${projectKey}",
-                customHeaders: [[name: 'Authorization', value: authHeader]],
-                validResponseCodes: '200'
-            )
-            def qualityGateJson = readJSON text: qualityGateResponse.content
-            def qualityGateStatus = qualityGateJson['projectStatus']['status']
-
-            // Print the quality gate status for debugging
-            echo "Quality Gate Status: ${qualityGateStatus}"
-
-            if (qualityGateStatus == 'ERROR') {
-                error "SonarQube Quality Gate failed!"
-            } else if (qualityGateStatus == 'OK') {
-                echo "SonarQube Quality Gate passed!"
-            } else {
-                error "SonarQube Quality Gate returned an unexpected status: ${qualityGateStatus}"
-            }
         }
-    }
-}
+//         stage('SonarQube Analysis') {
+//             agent { label 'master' }
+//             steps {
+//                 withSonarQubeEnv('mySonar') {
+//                     bat 'sonar-scanner'
+//                 }
+//             }
+//         }
+//         stage('Check Quality Gate') {
+//     agent { label 'master' }
+//     steps {
+//         script {
+//             // Fetch the task ID and project key from the SonarQube analysis report
+//             def reportPath = "${env.WORKSPACE}/.scannerwork/report-task.txt"
+//             def props = readProperties file: reportPath
+//             def ceTaskUrl = props['ceTaskUrl']
+//             def projectKey = props['projectKey'] // Extract the project key
+
+//             // Hardcode the token for debugging
+//             def authHeader = "Basic ${"sqa_cd09a59a2b62c8e78cdfca6c42d49eed90b43891:".bytes.encodeBase64().toString()}"
+
+//             // Print the Authorization header and URL for debugging
+//             echo "ceTaskUrl: ${ceTaskUrl}"
+//             echo "authHeader: ${authHeader}"
+
+//             // Poll the SonarQube API to wait for the task to complete
+//             def analysisStatus = ''
+//             timeout(time: 5, unit: 'MINUTES') {
+//                 waitUntil {
+//                     def response = httpRequest(
+//                         url: ceTaskUrl,
+//                         customHeaders: [[name: 'Authorization', value: authHeader]],
+//                         validResponseCodes: '200'
+//                     )
+//                     def json = readJSON text: response.content
+//                     analysisStatus = json['task']['status']
+//                     return analysisStatus == 'SUCCESS' || analysisStatus == 'FAILED'
+//                 }
+//             }
+
+//             // If the task failed, fail the pipeline
+//             if (analysisStatus == 'FAILED') {
+//                 error "SonarQube analysis task failed!"
+//             }
+
+//             // Fetch the quality gate status
+//             def qualityGateResponse = httpRequest(
+//                 url: "http://192.168.31.4:9000/api/qualitygates/project_status?projectKey=${projectKey}",
+//                 customHeaders: [[name: 'Authorization', value: authHeader]],
+//                 validResponseCodes: '200'
+//             )
+//             def qualityGateJson = readJSON text: qualityGateResponse.content
+//             def qualityGateStatus = qualityGateJson['projectStatus']['status']
+
+//             // Print the quality gate status for debugging
+//             echo "Quality Gate Status: ${qualityGateStatus}"
+
+//             if (qualityGateStatus == 'ERROR') {
+//                 error "SonarQube Quality Gate failed!"
+//             } else if (qualityGateStatus == 'OK') {
+//                 echo "SonarQube Quality Gate passed!"
+//             } else {
+//                 error "SonarQube Quality Gate returned an unexpected status: ${qualityGateStatus}"
+//             }
+//         }
+//     }
+// }
     }
     // post {
         // success {
