@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         SONAR_SERVER = 'http://192.168.31.4:9000' // SonarQube server URL
-        SONAR_TOKEN = credentials('sonarcred') // Replace with your Jenkins credential ID
+        SONAR_TOKEN = 'sqa_cd09a59a2b62c8e78cdfca6c42d49eed90b43891'
     }
     stages {
         stage('Checkout Repository') {
