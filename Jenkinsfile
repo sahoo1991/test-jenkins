@@ -1,5 +1,10 @@
 pipeline {
-    agent none
+    agent any
+
+    environment {
+        SONAR_SERVER = 'http://192.168.31.4:9000' // SonarQube server URL
+        SONAR_TOKEN = credentials('sonarcred') // Replace with your Jenkins credential ID
+    }
     stages {
         stage('Checkout Repository') {
             agent { label 'master' }
@@ -59,18 +64,37 @@ pipeline {
                 }
             }
         }
-        stage('Quality Gate') {
-            agent { label 'master' }
+        stage('Check Quality Gate') {
             steps {
-                echo 'Checking SonarQube Quality Gate status...'
                 script {
-                    def qualityGate = waitForQualityGate()
-                    if (qualityGate.status != 'OK') {
-                        error "Pipeline failed due to SonarQube Quality Gate failure: ${qualityGate.status}"
+                    // Fetch the task ID from the SonarQube analysis report
+                    def reportPath = "${env.WORKSPACE}/.scannerwork/report-task.txt"
+                    def props = readProperties file: reportPath
+                    def ceTaskUrl = props['ceTaskUrl']
+
+                    // Poll the SonarQube API to get the quality gate status
+                    def qualityGateStatus = ''
+                    timeout(time: 5, unit: 'MINUTES') {
+                        waitUntil {
+                            def response = httpRequest(
+                                url: ceTaskUrl,
+                                customHeaders: [[name: 'Authorization', value: "Basic ${SONAR_TOKEN.bytes.encodeBase64()}"]],
+                                validResponseCodes: '200'
+                            )
+                            def json = readJSON text: response.content
+                            qualityGateStatus = json['task']['status']
+                            return qualityGateStatus == 'SUCCESS' || qualityGateStatus == 'FAILED'
+                        }
+                    }
+
+                    // Fail the build if the quality gate status is FAILED
+                    if (qualityGateStatus == 'FAILED') {
+                        error "SonarQube Quality Gate failed!"
+                    } else {
+                        echo "SonarQube Quality Gate passed!"
                     }
                 }
             }
-        }
     }
     // post {
         // success {
