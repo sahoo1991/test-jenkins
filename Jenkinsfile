@@ -66,6 +66,11 @@ pipeline {
                     // Define the file to upload
                     def fileToUpload = "${env.WORKSPACE}/regression_report.zip"
         
+                    // Verify the file exists
+                    if (!fileExists(fileToUpload)) {
+                        error "File regression_report.zip does not exist at ${fileToUpload}"
+                    }
+        
                     // Print debug information
                     echo "Uploading file: ${fileToUpload} to Nexus"
         
