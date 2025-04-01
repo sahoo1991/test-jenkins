@@ -1,31 +1,28 @@
 pipeline {
-    agent any
-    environment {
-        SONAR_AUTH_TOKEN = credentials('sonarCred') // Store SonarQube token in Jenkins credentials
-    }
+    agent none
     stages {
         stage('Checkout Repository') {
+            agent { label 'master' }
             steps {
                 echo 'Checking out the repository...'
                 checkout scm
             }
         }
         stage('Setup Python Environment') {
+            agent { label 'master' }
             steps {
                 echo 'Setting up Python virtual environment and installing dependencies...'
-                sh '''
-                python3 -m venv venv
-                source venv/bin/activate
+                bat '''
                 pip install pytest pytest-html
                 '''
             }
         }
         stage('Run Tests') {
+            agent { label 'master' }
             steps {
-                echo 'Running Tests'
-                script {
-                    def testResult = sh(returnStatus: true, script: '''
-                        source venv/bin/activate
+                 echo 'Running Tests'
+                    script {
+                    def testResult = bat(returnStatus: true, script: '''
                         pytest -m regression --html=regression_report.html --self-contained-html
                     ''')
                     if (testResult != 0) {
@@ -41,39 +38,29 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
+        stage('Generate Report') {
+            agent { label 'master' }
             steps {
-                script {
-                    // Use the correct path to SonarScanner
-                    // def scannerHome = '/opt/homebrew/bin'
-        
-                    // Run SonarQube analysis
-                    withSonarQubeEnv('mySonar') {
-                        sh '''
-                        export PATH=$PATH:/opt/homebrew/bin
-                        sonar-scanner
-                        '''
-                    }
+                echo 'Generating ZIP report...'
+                bat 'powershell Compress-Archive -Path regression_report.html -DestinationPath regression_report.zip -Force'
+            }
+            post {
+                always {
+                    echo 'Archiving ZIP report...'
+                    archiveArtifacts artifacts: 'regression_report.zip', allowEmptyArchive: true
                 }
-                // script {
-                    // Use the correct path to SonarScanner
-                    // def scannerHome = '/opt/homebrew/bin'
-
-                    // // Run SonarQube analysis securely
-                    // withSonarQubeEnv('mySonar') {
-                    //     sh '''
-                    //     export PATH=$PATH:${scannerHome}
-                    //     export SONAR_TOKEN=$SONAR_AUTH_TOKEN
-                    //     sonar-scanner \
-                    //       -Dsonar.projectKey=test-jenkins \
-                    //       -Dsonar.sources=. \
-                    //       -Dsonar.host.url=$SONAR_HOST_URL
-                    //     '''
-                    // }
-                // }
+            }
+        }
+        stage('SonarQube Analysis') {
+            agent { label 'master' }
+            steps {
+                withSonarQubeEnv('mySonar') {
+                    bat 'sonar-scanner'
+                }
             }
         }
         stage('Quality Gate') {
+            agent { label 'master' }
             steps {
                 echo 'Checking SonarQube Quality Gate status...'
                 script {
@@ -85,12 +72,38 @@ pipeline {
             }
         }
     }
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
-        }
-    }
+    // post {
+        // success {
+        //     echo 'Pipeline completed successfully!'
+        //     emailext(
+        //         subject: "Build Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+        //         body: """
+        //         <p>The build was successful!</p>
+        //         <p>Pipeline: ${env.JOB_NAME}</p>
+        //         <p>Build Number: ${env.BUILD_NUMBER}</p>
+        //         <p>Reports:</p>
+        //         <ul>
+        //             <li><a href="${env.BUILD_URL}artifact/regression_report.html">Regression Report</a></li>
+        //             <li><a href="${env.BUILD_URL}artifact/regression_report.zip">Combined Report (ZIP)</a></li>
+        //         </ul>
+        //         """,
+        //         to: 'sahoosbautomation@gmail.com',
+        //         mimeType: 'text/html'
+        //     )
+        // }
+        // failure {
+        //     echo 'Pipeline failed!'
+        //     emailext(
+        //         subject: "Build Failure: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+        //         body: """
+        //         <p>The build failed!</p>
+        //         <p>Pipeline: ${env.JOB_NAME}</p>
+        //         <p>Build Number: ${env.BUILD_NUMBER}</p>
+        //         <p>Check the Jenkins logs for more details.</p>
+        //         """,
+        //         to: 'sahoosbautomation@gmail.com',
+        //         mimeType: 'text/html'
+        //     )
+        // }
+    // }
 }
