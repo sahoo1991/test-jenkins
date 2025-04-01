@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'master' }
 
     environment {
         SONAR_SERVER = 'http://192.168.31.4:9000' // SonarQube server URL
