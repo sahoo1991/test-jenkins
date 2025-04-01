@@ -113,11 +113,12 @@ pipeline {
             // Print the quality gate status for debugging
             echo "Quality Gate Status: ${qualityGateStatus}"
 
-            // Fail the build if the quality gate status is FAILED
-            if (qualityGateStatus == 'FAILED') {
+            if (qualityGateStatus == 'ERROR') {
                 error "SonarQube Quality Gate failed!"
-            } else {
+            } else if (qualityGateStatus == 'OK') {
                 echo "SonarQube Quality Gate passed!"
+            } else {
+                error "SonarQube Quality Gate returned an unexpected status: ${qualityGateStatus}"
             }
         }
     }
