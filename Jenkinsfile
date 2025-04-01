@@ -65,19 +65,24 @@ pipeline {
                 script {
                     // Define the file to upload
                     def fileToUpload = "${env.WORKSPACE}/regression_report.zip"
-
+        
                     // Print debug information
                     echo "Uploading file: ${fileToUpload} to Nexus"
-
+        
+                    // Construct the Authorization header
+                    def username = credentials('nexus-cred').username
+                    def password = credentials('nexus-cred').password
+                    def authHeader = "Basic ${"${username}:${password}".bytes.encodeBase64().toString()}"
+        
                     // Upload the file to Nexus
                     def response = httpRequest(
                         httpMode: 'PUT',
                         url: "${NEXUS_SERVER}/repository/${NEXUS_REPO}/regression_report.zip",
-                        customHeaders: [[name: 'Authorization', value: "Basic ${credentials('nexus-cred').username}:${credentials('nexus-cred').password}".bytes.encodeBase64().toString()}]],
+                        customHeaders: [[name: 'Authorization', value: authHeader]],
                         uploadFile: fileToUpload,
                         validResponseCodes: '200,201'
                     )
-
+        
                     // Print the response
                     echo "Nexus upload response: ${response.content}"
                 }
