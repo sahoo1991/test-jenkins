@@ -69,22 +69,23 @@ pipeline {
                     // Print debug information
                     echo "Uploading file: ${fileToUpload} to Nexus"
         
-                    // Construct the Authorization header
-                    def username = credentials('nexus-cred').username
-                    def password = credentials('nexus-cred').password
-                    def authHeader = "Basic ${"${username}:${password}".bytes.encodeBase64().toString()}"
+                    // Use withCredentials to access Nexus credentials
+                    withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                        // Construct the Authorization header
+                        def authHeader = "Basic ${"${env.NEXUS_USERNAME}:${env.NEXUS_PASSWORD}".bytes.encodeBase64().toString()}"
         
-                    // Upload the file to Nexus
-                    def response = httpRequest(
-                        httpMode: 'PUT',
-                        url: "${NEXUS_SERVER}/repository/${NEXUS_REPO}/regression_report.zip",
-                        customHeaders: [[name: 'Authorization', value: authHeader]],
-                        uploadFile: fileToUpload,
-                        validResponseCodes: '200,201'
-                    )
+                        // Upload the file to Nexus
+                        def response = httpRequest(
+                            httpMode: 'PUT',
+                            url: "${NEXUS_SERVER}/repository/${NEXUS_REPO}/regression_report.zip",
+                            customHeaders: [[name: 'Authorization', value: authHeader]],
+                            uploadFile: fileToUpload,
+                            validResponseCodes: '200,201'
+                        )
         
-                    // Print the response
-                    echo "Nexus upload response: ${response.content}"
+                        // Print the response
+                        echo "Nexus upload response: ${response.content}"
+                    }
                 }
             }
         }
