@@ -65,46 +65,46 @@ pipeline {
             }
         }
         stage('Check Quality Gate') {
-    agent { label 'master' }
-    steps {
-        script {
-            // Fetch the task ID from the SonarQube analysis report
-            def reportPath = "${env.WORKSPACE}/.scannerwork/report-task.txt"
-            def props = readProperties file: reportPath
-            def ceTaskUrl = props['ceTaskUrl']
-
-            // Hardcode the token for debugging
-            def authHeader = "Basic ${"sqa_cd09a59a2b62c8e78cdfca6c42d49eed90b43891:".bytes.encodeBase64().toString()}"
-
-            // Print the Authorization header and URL for debugging
-            echo "ceTaskUrl: ${ceTaskUrl}"
-            echo "authHeader: ${authHeader}"
-
-            // Poll the SonarQube API to get the quality gate status
-            def qualityGateStatus = ''
-            timeout(time: 5, unit: 'MINUTES') {
-                waitUntil {
-                    def response = httpRequest(
-                        url: ceTaskUrl,
-                        customHeaders: [[name: 'Authorization', value: authHeader]],
-                        validResponseCodes: '200'
-                    )
-                    def json = readJSON text: response.content
-                    qualityGateStatus = json['task']['status']
-                    return qualityGateStatus == 'SUCCESS' || qualityGateStatus == 'FAILED'
+        agent { label 'master' }
+        steps {
+            script {
+                // Fetch the task ID from the SonarQube analysis report
+                def reportPath = "${env.WORKSPACE}/.scannerwork/report-task.txt"
+                def props = readProperties file: reportPath
+                def ceTaskUrl = props['ceTaskUrl']
+    
+                // Hardcode the token for debugging
+                def authHeader = "Basic ${"sqa_cd09a59a2b62c8e78cdfca6c42d49eed90b43891:".bytes.encodeBase64().toString()}"
+    
+                // Print the Authorization header and URL for debugging
+                echo "ceTaskUrl: ${ceTaskUrl}"
+                echo "authHeader: ${authHeader}"
+    
+                // Poll the SonarQube API to get the quality gate status
+                def qualityGateStatus = ''
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitUntil {
+                        def response = httpRequest(
+                            url: ceTaskUrl,
+                            customHeaders: [[name: 'Authorization', value: authHeader]],
+                            validResponseCodes: '200'
+                        )
+                        def json = readJSON text: response.content
+                        qualityGateStatus = json['task']['status']
+                        return qualityGateStatus == 'SUCCESS' || qualityGateStatus == 'FAILED'
+                    }
                 }
-            }
 
-            // Fail the build if the quality gate status is FAILED
-            if (qualityGateStatus == 'FAILED') {
-                error "SonarQube Quality Gate failed!"
-            } else {
-                echo "SonarQube Quality Gate passed!"
-            }
+                // Fail the build if the quality gate status is FAILED
+                if (qualityGateStatus == 'FAILED') {
+                    error "SonarQube Quality Gate failed!"
+                } else {
+                    echo "SonarQube Quality Gate passed!"
+                }
         }
     }
 }
-    }
+  
     }
     // post {
         // success {
