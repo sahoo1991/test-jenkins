@@ -65,6 +65,7 @@ pipeline {
             }
         }
         stage('Check Quality Gate') {
+            agent { label 'master' }
             steps {
                 script {
                     // Fetch the task ID from the SonarQube analysis report
